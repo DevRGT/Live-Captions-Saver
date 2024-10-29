@@ -17,19 +17,13 @@ function saveTranscripts(meetingTitle, transcriptArray, meetingDate) {
     const yaml = `Meeting Date: ${meetingDate}\n\n` + jsonToYaml(transcriptArray); // Add meeting date to the top
     console.log(yaml);
 
-    // Format the meeting date in YYYYMMDD format for the filename prefix
-    const dateObj = new Date(meetingDate);
-    const formattedDate = dateObj.toISOString().slice(0, 10).replace(/-/g, ""); // "YYYYMMDD"
-    
-    // Generate the final filename with the date prefix
-    const filename = `${formattedDate} - ${meetingTitle}.txt`;
-
     chrome.downloads.download({
         url: 'data:text/plain,' + yaml,
-        filename: filename,
+        filename: meetingTitle + ".txt",
         saveAs: true
     });
 }
+
 
 
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
