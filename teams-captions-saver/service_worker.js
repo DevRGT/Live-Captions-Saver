@@ -28,7 +28,7 @@ function saveTranscripts(meetingTitle, transcriptArray, meetingDate, saveAs) {
     chrome.downloads.download({
         url: 'data:text/plain,' + encodeURIComponent(yaml),
         filename: filename, // Save with the formatted date prefix
-        saveAs: saveAs // Save directly without prompting the user
+        saveAs: true // Save directly without prompting the user
     }, (downloadId) => {
         if (chrome.runtime.lastError) {
             console.error("Error downloading file:", chrome.runtime.lastError.message);
