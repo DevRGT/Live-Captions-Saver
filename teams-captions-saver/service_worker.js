@@ -17,13 +17,37 @@ function saveTranscripts(meetingTitle, transcriptArray, meetingDate) {
     const yaml = `Meeting Date: ${meetingDate}\n\n` + jsonToYaml(transcriptArray); // Add meeting date to the top
     console.log(yaml);
 
-    chrome.downloads.download({
+	console.log("Meeting Date Value:", meetingDate);
+
+	let formattedDate = "unknownDate"; // Fallback value in case meetingDate is invalid
+
+	// Extract day, month, and year from the meetingDate
+	// This regular expression will work if meetingDate is in the format "DD/MM/YYYY" or "MM/DD/YYYY"
+	const datePattern = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/;
+	const match = meetingDate.match(datePattern);
+
+	if (match) {
+		const day = match[1];
+		const month = match[2];
+		const year = match[3];
+
+		// Construct the formatted date as "YYYYMMDD"
+		formattedDate = `${year}${month}${day}`;
+	} else {
+		console.error("Meeting date is not in the expected DD/MM/YYYY format.");
+	}
+
+	// Generate the final filename with the date prefix
+	const filename = `${formattedDate} - ${meetingTitle}.txt`;
+
+	console.log("Generated Filename:", filename);
+
+   chrome.downloads.download({
         url: 'data:text/plain,' + yaml,
-        filename: meetingTitle + ".txt",
-        saveAs: true
+        filename: filename,
+        saveAs: false
     });
 }
-
 
 
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
