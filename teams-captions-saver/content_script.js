@@ -80,7 +80,9 @@ function startTranscription() {
     return true;
 }
 
+console.log("Before startTranscription()");
 startTranscription();
+console.log("After startTranscription()");
 
 // Attach listener to the "Leave" button to save captions when the meeting ends
 function addLeaveButtonListener() {
