@@ -141,10 +141,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 window.onload = () => {
-    console.log("Window loaded. Running content script...");
+    console.error("Window loaded. Running content script...");
     startTranscription();
     addLeaveButtonListener();
 };
 
 
-console.log("content_script.js is running");
+console.warn("content_script.js is running");
