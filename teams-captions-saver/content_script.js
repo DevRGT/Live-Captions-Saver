@@ -1,6 +1,7 @@
 const transcriptArray = [];
 let capturing = false;
 let observer = null;
+let meetingDate = new Date().toLocaleDateString(); // Adding the date to use in captions
 
 function checkCaptions() {
     // Teams v2 
@@ -95,7 +96,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             chrome.runtime.sendMessage({
                 message: "download_captions",
                 transcriptArray: transcriptArray,
-                meetingTitle: meetingTitle
+                meetingTitle: meetingTitle,
+                meetingDate: meetingDate  // Include meeting date in message
             });
 
 
