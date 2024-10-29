@@ -13,7 +13,7 @@ function jsonToYaml(json) {
     }).join('\n');
 }
 
-function saveTranscripts(meetingTitle, transcriptArray, meetingDate, saveAs) {
+function saveTranscripts(meetingTitle, transcriptArray, meetingDate) {
     const yaml = `Meeting Date: ${meetingDate}\n\n` + jsonToYaml(transcriptArray); // Add meeting date to the top
     console.log(yaml);
 
@@ -44,13 +44,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     switch (message.message) {
         case 'download_captions': // message from Content script
             console.log('download_captions triggered!', message);
-            
-            // Load user's save option preference from local storage
-            chrome.storage.local.get(['saveOption'], function (result) {
-                const saveOption = result.saveOption || 'auto'; // Default to 'auto' if not set
-                const saveAs = (saveOption === 'ask'); // Determine if Save As prompt should be used
-                saveTranscripts(message.meetingTitle, message.transcriptArray, message.meetingDate, saveAs);
-            });
+            saveTranscripts(message.meetingTitle, message.transcriptArray, message.meetingDate)
             
             break;
         case 'save_captions': // message from Popup
