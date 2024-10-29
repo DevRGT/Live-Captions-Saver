@@ -91,7 +91,7 @@ function addLeaveButtonListener() {
         leaveButton.addEventListener('click', () => {
             console.log("Leave button clicked, saving captions...");
             chrome.runtime.sendMessage({
-                message: "return_transcript"
+                message: "save_captions"
             });
         });
     } else {
@@ -107,7 +107,7 @@ window.addEventListener("beforeunload", (event) => {
     if (capturing) {
         console.log("Captions are being captured. Saving captions before tab close...");
         chrome.runtime.sendMessage({
-            message: "return_transcript"
+            message: "save_captions"
         });
         event.returnValue = "Captions are being saved. Please do not close until the save is complete.";
     } else {
