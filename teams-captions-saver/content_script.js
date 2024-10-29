@@ -80,9 +80,6 @@ function startTranscription() {
     return true;
 }
 
-console.log("Before startTranscription()");
-startTranscription();
-console.log("After startTranscription()");
 
 // Attach listener to the "Leave" button to save captions when the meeting ends
 function addLeaveButtonListener() {
@@ -143,7 +140,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-// Call function to attach the listener to the leave button when script runs
-addLeaveButtonListener();
+window.onload = () => {
+    console.log("Window loaded. Running content script...");
+    startTranscription();
+    addLeaveButtonListener();
+};
+
 
 console.log("content_script.js is running");
