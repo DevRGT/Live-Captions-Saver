@@ -84,8 +84,11 @@ startTranscription();
 
 // Attach listener to the "Leave" button to save captions when the meeting ends
 function addLeaveButtonListener() {
+    console.log("Attempting to add leave button listener..."); // Track attempts to attach the listener
     const leaveButton = document.querySelector("button[data-tid='hangup-main-btn']");  // Updated selector for Leave button
+
     if (leaveButton) {
+        console.log("Leave button found. Adding event listener.");
         leaveButton.addEventListener('click', () => {
             console.log("Leave button clicked, saving captions...");
             chrome.runtime.sendMessage({
@@ -93,6 +96,7 @@ function addLeaveButtonListener() {
             });
         });
     } else {
+        console.log("Leave button not found, retrying...");
         // Retry finding the button every 2 seconds if not found immediately
         setTimeout(addLeaveButtonListener, 2000);
     }
@@ -100,14 +104,18 @@ function addLeaveButtonListener() {
 
 // Save captions on tab close
 window.addEventListener("beforeunload", (event) => {
+    console.log("Tab close event detected. Checking if captions are being captured...");
     if (capturing) {
-        console.log("Tab is being closed, saving captions...");
+        console.log("Captions are being captured. Saving captions before tab close...");
         chrome.runtime.sendMessage({
             message: "return_transcript"
         });
         event.returnValue = "Captions are being saved. Please do not close until the save is complete.";
+    } else {
+        console.log("No captions to save.");
     }
 });
+
 
 // Listen for messages from the service_worker.js script.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
