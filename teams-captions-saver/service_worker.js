@@ -13,7 +13,7 @@ function jsonToYaml(json) {
     }).join('\n');
 }
 
-function saveTranscripts(meetingTitle, transcriptArray, meetingDate) {
+function saveTranscripts(meetingTitle, transcriptArray, meetingDate, saveAs) {
     const yaml = `Meeting Date: ${meetingDate}\n\n` + jsonToYaml(transcriptArray); // Add meeting date to the top
     console.log(yaml);
 
@@ -28,7 +28,7 @@ function saveTranscripts(meetingTitle, transcriptArray, meetingDate) {
     chrome.downloads.download({
         url: 'data:text/plain,' + encodeURIComponent(yaml),
         filename: filename, // Save with the formatted date prefix
-        saveAs: false // Save directly without prompting the user
+        saveAs: saveAs // Save directly without prompting the user
     }, (downloadId) => {
         if (chrome.runtime.lastError) {
             console.error("Error downloading file:", chrome.runtime.lastError.message);
@@ -44,7 +44,14 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     switch (message.message) {
         case 'download_captions': // message from Content script
             console.log('download_captions triggered!', message);
-            saveTranscripts(message.meetingTitle, message.transcriptArray, message.meetingDate); // Pass meeting date
+            
+            // Load user's save option preference from local storage
+            chrome.storage.local.get(['saveOption'], function (result) {
+                const saveOption = result.saveOption || 'auto'; // Default to 'auto' if not set
+                const saveAs = (saveOption === 'ask'); // Determine if Save As prompt should be used
+                saveTranscripts(message.meetingTitle, message.transcriptArray, message.meetingDate, saveAs);
+            });
+            
             break;
         case 'save_captions': // message from Popup
             console.log('save_captions triggered!');
