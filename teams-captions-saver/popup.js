@@ -1,14 +1,18 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Code inside this block will execute after the extension is fully loaded
     console.log('popup.js loaded!');
 
     // Load saved preference from Chrome local storage
     chrome.storage.local.get(['saveOption'], function (result) {
-        if (result.saveOption) {
-            document.getElementById('saveOption').value = result.saveOption;
+        if (chrome.runtime.lastError) {
+            console.error("Error retrieving saved preference:", chrome.runtime.lastError);
         } else {
-            // Set default value to 'auto' if nothing is saved
-            document.getElementById('saveOption').value = 'auto';
+            if (result.saveOption) {
+                console.log("Loaded saveOption:", result.saveOption);
+                document.getElementById('saveOption').value = result.saveOption;
+            } else {
+                console.log("No saveOption found, setting default to 'auto'");
+                document.getElementById('saveOption').value = 'auto';
+            }
         }
     });
 
@@ -16,7 +20,11 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('saveOption').addEventListener('change', function () {
         const saveOption = document.getElementById('saveOption').value;
         chrome.storage.local.set({ saveOption: saveOption }, function () {
-            console.log('Save option set to:', saveOption);
+            if (chrome.runtime.lastError) {
+                console.error("Error saving saveOption:", chrome.runtime.lastError);
+            } else {
+                console.log('Save option set to:', saveOption);
+            }
         });
     });
 
