@@ -24,10 +24,17 @@ function saveTranscripts(meetingTitle, transcriptArray, meetingDate) {
     // Generate the final filename with the date prefix
     const filename = `${formattedDate} - ${meetingTitle}.txt`;
 
+    // Use chrome.downloads API to save it directly to the "Downloads" folder without prompting the user
     chrome.downloads.download({
-        url: 'data:text/plain,' + yaml,
-        filename: meetingTitle + ".txt",
-        saveAs: true
+        url: 'data:text/plain,' + encodeURIComponent(yaml),
+        filename: filename, // Save with the formatted date prefix
+        saveAs: false // Save directly without prompting the user
+    }, (downloadId) => {
+        if (chrome.runtime.lastError) {
+            console.error("Error downloading file:", chrome.runtime.lastError.message);
+        } else {
+            console.log("Download started with ID:", downloadId);
+        }
     });
 }
 
