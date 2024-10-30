@@ -13,10 +13,8 @@
             align-items: center;
             justify-content: center;
             background-color: #f4f4f4;
-            height: 290px;
-            /* Adjust as needed */
-            width: 320px;
-            /* Adjust as needed */
+            height: 460px; /* Adjusted height to accommodate new settings */
+            width: 320px; /* Adjust as needed */
         }
 
         button {
@@ -42,11 +40,106 @@
         #saveButton:hover {
             background-color: #1e7e34;
         }
-        span {
-            font-size: 12px;
-            color: #6c757d;
-            padding:30px;
+
+        .settings-container {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #ffffff;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
         }
+
+        .setting-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        /* Large Toggle Switch Style - Adjusted for Your New Widths */
+        .large-toggle {
+            display: flex;
+            align-items: center;
+            background-color: #ccc;
+            border-radius: 25px;
+            overflow: hidden;
+            width: 290px; /* Increased width to align evenly */
+            height: 25px; /* Consistent height with the smaller toggle */
+            cursor: pointer;
+            position: relative;
+            transition: background-color 0.3s ease;
+        }
+
+        .large-toggle-option {
+            flex: 1;
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px; /* Reduced font size */
+            padding: 3px 0; /* Adjusted padding to fit better */
+            transition: color 0.3s ease;
+            z-index: 2; /* Ensure text is above the slider */
+        }
+
+        .large-toggle-option.selected {
+            color: white;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            width: 145px; /* Adjusted width for smoother toggle between options */
+            height: 100%;
+            background-color: #007BFF;
+            border-radius: 25px;
+            transition: transform 0.3s ease;
+            z-index: 1; /* Keep the slider behind the text */
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .toggle-switch input[type="checkbox"] {
+            display: none;
+        }
+
+        .slider {
+            position: relative;
+            width: 50px;
+            height: 25px;
+            border-radius: 25px;
+            background-color: #ccc;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .slider::before {
+            content: "";
+            position: absolute;
+            width: 23px;
+            height: 23px;
+            border-radius: 50%;
+            background-color: white;
+            top: 1px;
+            left: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="checkbox"]:checked + .slider {
+            background-color: #007BFF;
+        }
+
+        input[type="checkbox"]:checked + .slider::before {
+            transform: translateX(25px);
+        }
+
+        label {
+            font-size: 14px;
+            color: #333;
+            margin-left: 10px;
+        }
+
     </style>
     <script src="popup.js" defer></script>
 </head>
@@ -55,7 +148,29 @@
     <h2 id="popup-header">Captions Saver v3</h2>
     <h3><i>New Teams Only</i></h3>
     <span>To start, click More > Language and Speech > Turn on live captions</span>
+
+    <!-- Save Captions Button -->
     <button id="saveButton">Save Captions</button>
+
+    <!-- Settings Section -->
+    <div class="settings-container">
+        <!-- Large Toggle Switch for Auto Save / Choose Location -->
+        <div class="setting-title">Saving Options:</div>
+        <div class="large-toggle" id="saveToggle">
+            <div class="toggle-slider" id="toggleSlider"></div>
+            <div class="large-toggle-option selected" id="autoSaveOption">Auto Save</div>
+            <div class="large-toggle-option" id="askSaveOption">Choose Location</div>
+        </div>
+
+		<!-- Toggle Switch for Save on Leave Button -->
+		<div class="toggle-switch">
+			<label>
+				<input type="checkbox" id="leaveTriggerToggle">
+				<div class="slider"></div>
+			</label>
+			<label for="leaveTriggerToggle">Save captions when clicking "Leave" button</label>
+		</div>
+    </div>
 </body>
 
 </html>
