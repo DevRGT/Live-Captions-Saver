@@ -1,13 +1,19 @@
+// Define a constant for the "Leave" button selector
+const LEAVE_BUTTON_SELECTOR = "button[data-tid='hangup-main-btn']";
+
 const transcriptArray = [];
 let capturing = false;
 let observer = null;
 let meetingDate = new Date().toLocaleDateString(); // Adding the date to use in captions
 
+let leaveButtonListener = null; // Store reference to the leave button event listener
+let leaveButton = null; // Store the reference to the current "Leave" button
+let lastMeetingTitle = ""; // To track the last meeting title
+
 function checkCaptions() {
     // Teams v2 
-    const closedCaptionsContainer = document.querySelector("[data-tid='closed-captions-renderer']")
+    const closedCaptionsContainer = document.querySelector("[data-tid='closed-captions-renderer']");
     if (!closedCaptionsContainer) {
-        // "Please, click 'More' > 'Language and speech' > 'Turn on live captions'"
         return;
     }
     const transcripts = closedCaptionsContainer.querySelectorAll('.ui-chat__item');
@@ -32,38 +38,24 @@ function checkCaptions() {
                     };
                 }
             } else {
-                console.log({
-                    Name,
-                    Text,
-                    Time,
-                    ID
-                });
+                console.log({ Name, Text, Time, ID });
                 // Add new transcript
-                transcriptArray.push({
-                    Name,
-                    Text,
-                    Time,
-                    ID
-                });
+                transcriptArray.push({ Name, Text, Time, ID });
             }
-
         }
-
     });
 }
 
-// run startTranscription every 5 seconds
-// cancel the interval if capturing is true
+// Run startTranscription every 5 seconds
+// Cancel the interval if capturing is true
 function startTranscription() {
     const meetingDurationElement = document.getElementById("call-duration-custom");
-    if (meetingDurationElement) {
-
-    } else {
+    if (!meetingDurationElement) {
         setTimeout(startTranscription, 5000);
         return false;
     }
 
-    const closedCaptionsContainer = document.querySelector("[data-tid='closed-captions-renderer']")
+    const closedCaptionsContainer = document.querySelector("[data-tid='closed-captions-renderer']");
     if (!closedCaptionsContainer) {
         console.log("Please, click 'More' > 'Language and speech' > 'Turn on live captions'");
         setTimeout(startTranscription, 5000);
@@ -80,45 +72,92 @@ function startTranscription() {
     return true;
 }
 
-
-// Attach listener to the "Leave" button to save captions when the meeting ends
-function addLeaveButtonListener() {
-    console.log("Attempting to add leave button listener..."); // Track attempts to attach the listener
-    const leaveButton = document.querySelector("button[data-tid='hangup-main-btn']");  // Updated selector for Leave button
-
-    if (leaveButton) {
-        console.log("Leave button found. Adding event listener.");
-        leaveButton.addEventListener('click', () => {
-            console.log("Leave button clicked, saving captions...");
-            chrome.runtime.sendMessage({
-                message: "save_captions"
-            });
-        });
-    } else {
-        console.log("Leave button not found, retrying...");
-        // Retry finding the button every 2 seconds if not found immediately
-        setTimeout(addLeaveButtonListener, 2000);
+// Attach or remove listener to/from the "Leave" button based on leaveTrigger
+function handleLeaveButtonListener(newLeaveButton) {
+    // Remove the event listener from the previous button if it exists
+    if (leaveButton && leaveButtonListener) {
+        console.log("Removing event listener from the previous Leave button...");
+        leaveButton.removeEventListener('click', leaveButtonListener);
     }
+
+    // Set the current meeting title when we find the Leave button
+    let currentMeetingTitle = document.title
+        .replace(/\(\d+\)\s*/, '')   // Remove the number in brackets and the space after it
+        .replace("Microsoft Teams", '') // Remove "Microsoft Teams" part
+        .trim(); // Trim leading/trailing whitespace
+
+    console.log("Current Meeting Title Detected:", currentMeetingTitle);
+
+    // Detect if this is a new meeting by comparing meeting titles
+    if (currentMeetingTitle !== lastMeetingTitle) {
+        console.log("New meeting detected. Clearing previous transcript...");
+        transcriptArray.length = 0; // Clear the transcriptArray for a new meeting
+        lastMeetingTitle = currentMeetingTitle; // Update the lastMeetingTitle to the new one
+    }
+
+    // Attach or detach the event listener based on the value of leaveTrigger
+    chrome.storage.local.get(['leaveTrigger'], function (result) {
+        const leaveTrigger = result.leaveTrigger || false; // Default to false if undefined
+
+        if (leaveTrigger) {
+            console.log("leaveTrigger is enabled, adding event listener to Leave button.");
+            if (!leaveButtonListener) {
+                leaveButtonListener = () => {
+                    console.log("Leave button clicked, saving captions...");
+                    chrome.runtime.sendMessage({
+                        message: "leave_button_save_captions"
+                    });
+                };
+            }
+            // Update the reference to the current leave button and add the listener
+            newLeaveButton.addEventListener('click', leaveButtonListener);
+        } else {
+            console.log("leaveTrigger is disabled, removing event listener from Leave button if it exists.");
+            if (leaveButtonListener) {
+                newLeaveButton.removeEventListener('click', leaveButtonListener);
+                leaveButtonListener = null;
+            }
+        }
+    });
+
+    // Update the leaveButton reference
+    leaveButton = newLeaveButton;
 }
 
-// Save captions on tab close
-window.addEventListener("beforeunload", (event) => {
-    console.log("Tab close event detected. Checking if captions are being captured...");
-    if (capturing) {
-        console.log("Captions are being captured. Saving captions before tab close...");
-        chrome.runtime.sendMessage({
-            message: "save_captions"
+// Function to handle when leave button is dynamically added to the page
+function observeLeaveButton() {
+    const observerConfig = {
+        childList: true,
+        subtree: true,
+    };
+
+    const mutationObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'childList') {
+                // Search for the "Leave" button each time there is a change
+                const newLeaveButton = document.querySelector(LEAVE_BUTTON_SELECTOR);
+                if (newLeaveButton && newLeaveButton !== leaveButton) {
+                    console.log("New Leave button found. Updating listener...");
+                    handleLeaveButtonListener(newLeaveButton);
+                }
+            }
         });
-        event.returnValue = "Captions are being saved. Please do not close until the save is complete.";
-    } else {
-        console.log("No captions to save.");
+    });
+
+    mutationObserver.observe(document.body, observerConfig);
+}
+
+// Listen for changes in the leaveTrigger value
+chrome.storage.onChanged.addListener(function (changes, areaName) {
+    if (areaName === 'local' && changes.leaveTrigger) {
+        console.log("leaveTrigger setting has changed. Updating leave button listener...");
+        handleLeaveButtonListener(leaveButton); // Re-run the logic to update the listener
     }
 });
 
-
-// Listen for messages from the service_worker.js script.
+// Listen for messages from the service_worker.js script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    switch (request.message) {  // message from service_worker.js      
+    switch (request.message) {
         case 'return_transcript':
             console.log("response:", transcriptArray);
             if (!capturing) {
@@ -126,11 +165,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 return;
             }
 
-            let meetingTitle = document.title.replace("__Microsoft_Teams", '').replace(/[^a-z0-9 ]/gi, '');
+            // Use cleaned up meeting title
             chrome.runtime.sendMessage({
                 message: "download_captions",
                 transcriptArray: transcriptArray,
-                meetingTitle: meetingTitle,
+                meetingTitle: lastMeetingTitle, // Use lastMeetingTitle instead of recalculating
                 meetingDate: meetingDate  // Include meeting date in message
             });
             break;
@@ -140,11 +179,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
+// Initialize leave button observer
 window.onload = () => {
     console.log("Window loaded. Running content script...");
     startTranscription();
-    addLeaveButtonListener();
+    observeLeaveButton(); // Start observing the leave button dynamically
 };
-
 
 console.log("content_script.js is running");
