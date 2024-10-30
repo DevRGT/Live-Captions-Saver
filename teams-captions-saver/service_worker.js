@@ -13,8 +13,8 @@ function jsonToYaml(json) {
     }).join('\n');
 }
 
-function saveTranscripts(meetingTitle, transcriptArray, meetingDate) {
-    const yaml = `Meeting Date: ${meetingDate}\n\n` + jsonToYaml(transcriptArray); // Add meeting date to the top
+function saveTranscripts(meetingTitle, transcriptArray, meetingDate, meetingDetails) {
+    const yaml = `Meeting Title: ${meetingTitle}\n` + `Initial Meeting Schedule: ${meetingDetails}\n` + `Real Captions Date: ${meetingDate}\n\n\n` + jsonToYaml(transcriptArray); // Add meeting date to the top
     console.log(yaml);
 
     console.log("Meeting Date Value:", meetingDate);
@@ -79,7 +79,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     switch (message.message) {
         case 'download_captions': // message from Content script
             console.log('download_captions triggered!', message);
-            saveTranscripts(message.meetingTitle, message.transcriptArray, message.meetingDate);
+            saveTranscripts(message.meetingTitle, message.transcriptArray, message.meetingDate, message.meetingDetails);
             break;
         case 'manual_save_captions': // Updated to handle manual Save Button click
             console.log('manual_save_captions triggered!');
