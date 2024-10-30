@@ -196,7 +196,7 @@ function getMeetingDetails() {
         console.log("Meeting Details:", meetingDetails);
         return meetingDetails;
     } else {
-        console.warn("Meeting details container not found.");
+        console.log("Meeting details container not found.");
         return null;
     }
 }
