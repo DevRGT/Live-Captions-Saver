@@ -9,6 +9,7 @@ let meetingDate = new Date().toLocaleDateString(); // Adding the date to use in 
 let leaveButtonListener = null; // Store reference to the leave button event listener
 let leaveButton = null; // Store the reference to the current "Leave" button
 let lastMeetingTitle = ""; // To track the last meeting title
+let meetingDetails = ""; // To store meeting details (like date, time, etc.)
 
 function checkCaptions() {
     // Teams v2 
@@ -93,6 +94,12 @@ function handleLeaveButtonListener(newLeaveButton) {
         console.log("New meeting detected. Clearing previous transcript...");
         transcriptArray.length = 0; // Clear the transcriptArray for a new meeting
         lastMeetingTitle = currentMeetingTitle; // Update the lastMeetingTitle to the new one
+
+        // Retrieve meeting details as part of new meeting start
+        const meetingDetails = getMeetingDetails();
+        if (meetingDetails) {
+            console.log("Retrieved Meeting Details:", meetingDetails);
+        }
     }
 
     // Attach or detach the event listener based on the value of leaveTrigger
@@ -124,8 +131,8 @@ function handleLeaveButtonListener(newLeaveButton) {
     leaveButton = newLeaveButton;
 }
 
-// Function to handle when leave button is dynamically added to the page
-function observeLeaveButton() {
+// Function to handle dynamic elements, such as the leave button and meeting details container
+function observeDynamicElements() {
     const observerConfig = {
         childList: true,
         subtree: true,
@@ -139,6 +146,16 @@ function observeLeaveButton() {
                 if (newLeaveButton && newLeaveButton !== leaveButton) {
                     console.log("New Leave button found. Updating listener...");
                     handleLeaveButtonListener(newLeaveButton);
+                }
+
+                // Observe for meeting details container dynamically added
+                const meetingDetailsContainer = document.querySelector('div[data-tid="meeting-details-container"]');
+                if (meetingDetailsContainer) {
+                    console.log("Meeting details container found.");
+                    const meetingDetails = getMeetingDetails();
+                    if (meetingDetails) {
+                        console.log("Meeting Details:", meetingDetails);
+                    }
                 }
             }
         });
@@ -155,6 +172,35 @@ chrome.storage.onChanged.addListener(function (changes, areaName) {
     }
 });
 
+function getMeetingDetails() {
+    // Step 1: Find the container using data-tid attribute
+    const meetingDetailsContainer = document.querySelector('div[data-tid="meeting-details-container"]');
+    
+    if (meetingDetailsContainer) {
+        // Step 2: Select all span elements within this container
+        const spans = meetingDetailsContainer.querySelectorAll('span');
+
+        // Step 3: Extract text from each span and concatenate it
+        let details = "";
+        spans.forEach((span, index) => {
+            details += span.textContent.trim();
+            if (index < spans.length - 1) {
+                details += " "; // Add space separator except for the last element
+            }
+        });
+
+        // Store the meeting details in the global variable
+        meetingDetails = details;
+
+        // Log or return the result as needed
+        console.log("Meeting Details:", meetingDetails);
+        return meetingDetails;
+    } else {
+        console.warn("Meeting details container not found.");
+        return null;
+    }
+}
+
 // Listen for messages from the service_worker.js script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.message) {
@@ -170,7 +216,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 message: "download_captions",
                 transcriptArray: transcriptArray,
                 meetingTitle: lastMeetingTitle, // Use lastMeetingTitle instead of recalculating
-                meetingDate: meetingDate  // Include meeting date in message
+                meetingDate: meetingDate,  // Include meeting date in message
+                meetingDetails: meetingDetails  // Include meeting details in message
             });
             break;
 
@@ -179,11 +226,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-// Initialize leave button observer
+// Initialize dynamic elements observer
 window.onload = () => {
     console.log("Window loaded. Running content script...");
     startTranscription();
-    observeLeaveButton(); // Start observing the leave button dynamically
+    observeDynamicElements(); // Start observing dynamic elements like the leave button and meeting details
 };
 
 console.log("content_script.js is running");
