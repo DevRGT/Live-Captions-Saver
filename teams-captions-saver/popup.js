@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Send a message to the background/service worker to save the captions
         chrome.runtime.sendMessage({
-            message: "save_captions"
+            message: "manual_save_captions"
         });
     });
 
