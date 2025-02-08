@@ -12,10 +12,11 @@
   "homepage_url": "https://spdenis.com",  
   "permissions": [
     "downloads",
-    "activeTab"
+    "activeTab",
+    "storage"  // Added "storage" permission
   ],
   "host_permissions": [
-      "https://teams.microsoft.com/*"
+    "https://teams.microsoft.com/*"
   ],
   "background": {
     "service_worker": "service_worker.js"
