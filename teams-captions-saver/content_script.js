@@ -1,5 +1,5 @@
 // Define a constant for the "Leave" button selector
-//const LEAVE_BUTTON_SELECTOR = "button[data-tid='hangup-main-btn']";
+//const LEAVE_BUTTON_SELECTOR = "button[data-tid='hangup-main-btn']"; // The button was not always the same depend of who is the owner of the meeting. So I changed for another identifier.
 const LEAVE_BUTTON_SELECTOR = "div#hangup-button button";
 
 
