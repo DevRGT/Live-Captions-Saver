@@ -13,7 +13,8 @@
   "permissions": [
     "downloads",
     "activeTab",
-    "storage"  // Added "storage" permission
+    "storage",
+    "audioCapture"
   ],
   "host_permissions": [
     "https://teams.microsoft.com/*"

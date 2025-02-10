@@ -1,7 +1,8 @@
-// Service worker is a script that your browser runs in the background, separate from a web page, opening the door to features that don't need a web page 
+// Service worker is a script that your browser runs in the background, separate from a web page, opening the door to features that don't need a web page
 // or user interaction.
 // Service worker script will be forcefully terminated after about 30 seconds of inactivity, and restarted when it's next needed.
 // https://stackoverflow.com/questions/66618136/persistent-service-worker-in-chrome-extension/66618269#66618269
+import { Buffer } from 'buffer';
 
 // This code is not used. But without it, the extension does not work
 let isTranscribing = false;
@@ -124,6 +125,55 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
             break;
         default:
             break;
+        case 'audio_data':
+            console.log('audio_data triggered!');
+            saveAudio(message.audio, message.meetingTitle, message.meetingDate);
+            break;
     }
 });
 
+async function saveAudio(audioData, meetingTitle, meetingDate) {
+    try {
+        const buffer = Buffer.from(audioData.split(',')[1], 'base64');
+
+        let formattedDate = "unknownDate"; // Fallback value in case meetingDate is invalid
+
+        // Extract day, month, and year from the meetingDate
+        const datePattern = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/;
+        const match = meetingDate.match(datePattern);
+
+        if (match) {
+            const day = match[1];
+            const month = match[2];
+            const year = match[3];
+
+            // Construct the formatted date as "YYYYMMDD"
+            formattedDate = `${year}${month}${day}`;
+        } else {
+            console.error("Meeting date is not in the expected DD/MM/YYYY format.");
+        }
+
+        // Sanitize the meeting title to make it suitable for a filename
+        let sanitizedMeetingTitle = meetingTitle.replace(/[<>:"\/\\|?*\x00-\x1F]/g, '_').trim();
+        if (sanitizedMeetingTitle.length === 0) {
+            sanitizedMeetingTitle = "Meeting";
+        }
+
+        const filename = `${formattedDate} - ${sanitizedMeetingTitle}.mp3`;
+
+        chrome.downloads.download({
+            url: 'data:audio/mp3;base64,' + buffer.toString('base64'),
+            filename: filename,
+            saveAs: false // Auto Save
+        }, (downloadId) => {
+            if (chrome.runtime.lastError) {
+                console.error("Error downloading file:", chrome.runtime.lastError.message);
+            } else {
+                console.log("Audio Download started with ID:", downloadId);
+            }
+        });
+
+    } catch (error) {
+        console.error("Error saving audio:", error);
+    }
+}

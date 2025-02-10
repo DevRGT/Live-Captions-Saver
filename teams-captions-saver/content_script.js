@@ -13,6 +13,8 @@ let leaveButton = null; // Store the reference to the current "Leave" button
 let lastMeetingTitle = ""; // To track the last meeting title
 let meetingDetails = ""; // To store meeting details (like date, time, etc.)
 let startTranscriptionTime = null; // To store a unique Timestamp each time we start a new transcription
+let mediaRecorder;
+let audioChunks = [];
 
 /*
 	function checkCaptions() {
@@ -388,6 +390,38 @@ function handleLeaveTriggerSettingChange() {
 // Elements like the "Join now" button, "Leave" button, and meeting details container can appear or change as the user navigates through different meeting phases.
 
 function observeDynamicElements() {
+
+    function startRecording() {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                    audioChunks = [];
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64String = reader.result;
+                        chrome.runtime.sendMessage({ message: "audio_data", audio: base64String });
+                    }
+                    reader.readAsDataURL(audioBlob);
+                };
+                mediaRecorder.start();
+                console.log('Recording started');
+            })
+            .catch(error => {
+                console.error('Error accessing microphone:', error);
+            });
+    }
+
+    function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+            console.log('Recording stopped');
+        }
+    }
     // Configuration for the MutationObserver to watch changes in the DOM.
     // 'childList: true' to observe when children are added or removed, and 'subtree: true' to monitor all descendant nodes.
     // The goal is to catch any important UI elements that are dynamically added or updated.
@@ -415,7 +449,10 @@ function observeDynamicElements() {
 
  
 					handleLeaveButtonDetection(newLeaveButton);
-                }
+					               startRecording();
+					           } else if (!newLeaveButton) {
+					               stopRecording();
+					           }
 
                 // Observe for the "meeting-details-container", which provides information about the meeting such as the title, date, time and participants.
                 // These meeting details are displayed before the user officially joins the meeting. However, they may take some time to be fully populated.
