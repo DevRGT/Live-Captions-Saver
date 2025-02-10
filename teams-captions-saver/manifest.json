@@ -14,7 +14,8 @@
     "downloads",
     "activeTab",
     "storage",
-    "audioCapture"
+    "audioCapture",
+    "fileSystemDirectory"
   ],
   "host_permissions": [
     "https://teams.microsoft.com/*"

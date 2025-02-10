@@ -93,4 +93,36 @@ document.addEventListener('DOMContentLoaded', function () {
 			}
 		});
 	});
+
+		  // Directory Input and Button
+		  const directoryInput = document.getElementById('directoryInput');
+		  const chooseDirectoryButton = document.getElementById('chooseDirectoryButton');
+		  const directoryStatus = document.getElementById('directoryStatus');
+
+		  // Load saved directory when the popup is opened
+		  chrome.storage.local.get(['directory'], function (result) {
+		      if (result.directory) {
+		          directoryInput.value = result.directory;
+		          directoryStatus.textContent = `Current directory: ${result.directory}`;
+		      } else {
+		          directoryStatus.textContent = 'No directory chosen.';
+		      }
+		  });
+
+		  // Event listener for the "Choose Directory" button
+		  chooseDirectoryButton.addEventListener('click', async function () {
+		      const directory = await chrome.fileSystem.chooseEntry({ type: 'openDirectory' });
+		      if (directory) {
+		          const directoryPath = directory.id;
+		          directoryInput.value = directoryPath;
+
+		          // Save the directory to Chrome's local storage
+		          chrome.storage.local.set({ directory: directoryPath }, function () {
+		              directoryStatus.textContent = `Directory saved: ${directoryPath}`;
+		              console.log('Directory saved: ' + directoryPath);
+		          });
+		      } else {
+		          directoryStatus.textContent = 'No directory chosen.';
+		      }
+		  });
 });

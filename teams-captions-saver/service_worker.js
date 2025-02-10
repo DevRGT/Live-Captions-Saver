@@ -60,16 +60,25 @@ function saveTranscripts(meetingTitle, transcriptArray, meetingDate, meetingDeta
         }
 
         // Use chrome.downloads API to save the file
-        chrome.downloads.download({
-            url: 'data:text/plain,' + encodeURIComponent(yaml),
-            filename: filename,
-            saveAs: saveAsOption // Use the retrieved user preference
-        }, (downloadId) => {
-            if (chrome.runtime.lastError) {
-                console.error("Error downloading file:", chrome.runtime.lastError.message);
-            } else {
-                console.log("Download started with ID:", downloadId);
+        chrome.storage.local.get(['directory'], function (result) {
+            let directory = result.directory;
+            let fullFilename = filename;
+
+            if (directory) {
+                fullFilename = `${directory}/${filename}`;
             }
+
+            chrome.downloads.download({
+                url: 'data:text/plain,' + encodeURIComponent(yaml),
+                filename: fullFilename,
+                saveAs: saveAsOption // Use the retrieved user preference
+            }, (downloadId) => {
+                if (chrome.runtime.lastError) {
+                    console.error("Error downloading file:", chrome.runtime.lastError.message);
+                } else {
+                    console.log("Download started with ID:", downloadId);
+                }
+            });
         });
     });
 }
