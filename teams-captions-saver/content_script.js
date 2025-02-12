@@ -101,6 +101,27 @@ function getTimestampBasedOnInterval() {
 
 
 
+// Function to detect the initial caption language
+function detectInitialCaptionLanguage() {
+    const captionWrapper = document.querySelector('div[data-tid="closed-caption-default-text-wrapper"]');
+    if (captionWrapper) {
+        const button = captionWrapper.querySelector('button[aria-label]');
+        if (button) {
+            const language = button.getAttribute('aria-label').replace('Captions will be shown in ', '');
+            const time = new Date().toLocaleTimeString();
+            transcriptArray.push({
+                Name: "Microsoft Teams System",
+                Text: "Captions Language Set to: " + language,
+                Time: time,
+                ID: "language-detection" // Unique ID for language detection message
+            });
+            console.log("Detected caption language:", language);
+            // Remove the language detection element to prevent reprocessing
+            captionWrapper.remove();
+        }
+    }
+}
+
 // Function to check and process the closed captions being displayed in a Teams meeting.
 // Captions are dynamically updated in Microsoft Teams, and this function helps to capture and track them.
 // The function extracts each individual caption item, identifies if it's new or modified, and updates the transcript array accordingly.
@@ -234,6 +255,7 @@ function startTranscription() {
 // This function runs in an interval, attempting to find the meeting elements required for transcription.
 // Once elements are found, it attaches an observer to capture real-time changes in closed captions.
 function startTranscription() {
+    detectInitialCaptionLanguage();
     // First, locate the meeting duration element by its ID.
     // This element is used to determine if we are in an active meeting and if transcription can be initiated.
     const meetingDurationElement = document.getElementById("call-duration-custom");
@@ -449,6 +471,7 @@ function observeDynamicElements() {
 
  
 					handleLeaveButtonDetection(newLeaveButton);
+                    detectInitialCaptionLanguage();
 					               startRecording();
 					           } else if (!newLeaveButton) {
 					               stopRecording();

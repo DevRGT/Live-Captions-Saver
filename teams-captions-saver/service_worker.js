@@ -10,9 +10,10 @@ let transcriptArray = [];
 
 function jsonToYaml(json) {
     return json.map(entry => {
-        return `Name: ${entry.Name}\nText: ${entry.Text}\nTime: ${entry.Time}\n----`;
+        return `Name: ${entry.Name || ''}\nText: ${entry.Text || ''}\nTime: ${entry.Time || ''}\n----`;
     }).join('\n');
 }
+
 
 function saveTranscripts(meetingTitle, transcriptArray, meetingDate, meetingDetails) {
     const yaml = `Meeting Title: ${meetingTitle}\n` + `Initial Meeting Schedule: ${meetingDetails}\n` + `Real Captions Date: ${meetingDate}\n\n\n` + jsonToYaml(transcriptArray); // Add meeting date to the top
