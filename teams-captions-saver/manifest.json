@@ -8,7 +8,7 @@
   },
   
   "version": "3.3.dev",
-  "description": "This extension allows you to capture and save MS Teams live captions.",
+  "description": "This extension allows you to capture and save MS Teams live captions. New version by RGT",
   "homepage_url": "",  
   "permissions": [
     "downloads",
