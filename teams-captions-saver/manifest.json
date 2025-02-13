@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "MS Teams Live Captions Saver.",
+  "name": "MS Teams Live Captions Saver. [Dev]",
   "icons": {
-    "16": "icon.png",
-    "48": "icon.png",
-    "128": "icon.png"
+    "16": "icon_dev.png",
+    "48": "icon_dev.png",
+    "128": "icon_dev.png"
   },
   
   "version": "3.3",
